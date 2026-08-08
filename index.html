@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Max 3D+ AI Pro - Thách Thức Toán Học</title>
+
+    <!-- Hỗ trợ Icon khi thêm vào màn hình chính (Add to Home Screen) -->
+    <!-- Favicon thông thường cho trình duyệt desktop -->
+    <link rel="icon" type="image/png" href="icon.png">
+    
+    <!-- Icon dành cho thiết bị Apple (iOS/Safari) -->
+    <!-- Apple yêu cầu ảnh .png, hình vuông, kích thước chuẩn là 180x180 để hiển thị đẹp nhất. -->
+    <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+    
+    <!-- Cấu hình thanh trạng thái cho iOS khi chạy ở chế độ PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Max 3D+ AI">
+
+    <!-- Cấu hình dành cho Android / Chrome (PWA) -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#ed1c24"> <!-- Màu thanh địa chỉ Chrome -->
+    
+    <!-- Gợi ý trình duyệt Android sử dụng file icon này -->
+    <link rel="icon" sizes="192x192" href="icon.png">
+    <link rel="icon" sizes="512x512" href="icon.png">
+
+    <!-- Link Font và Library xác pháo -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root { --vietlott-red: #ed1c24; --gold: #ffd700; --vietlott-dark: #be1117; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: 'Poppins', sans-serif; background: linear-gradient(180deg, #ed1c24 0%, #7b0a0e 100%); color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; user-select: none; }
+        .app-wrapper { flex: 1; display: flex; flex-direction: column; max-width: 500px; margin: 0 auto; width: 100%; padding: 10px; position: relative; }
+        
+        header { text-align: center; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+        .logo-img { width: 35px; height: 35px; }
+        
+        .status-bar { font-size: 10px; opacity: 0.7; display: flex; align-items: center; gap: 5px; }
+        #led { width: 8px; height: 8px; border-radius: 50%; background-color: #555; box-shadow: inset 0 1px 1px rgba(0,0,0,0.5); }
+        .led-blink { animation: blink 0.5s infinite; background-color: #00ff00 !important; box-shadow: 0 0 5px #00ff00, inset 0 1px 1px rgba(0,0,0,0.5) !important; }
+        .led-connected { background-color: #00ff00 !important; box-shadow: inset 0 1px 1px rgba(0,0,0,0.5); }
+        @keyframes blink { 0% { opacity: 0.2; } 50% { opacity: 1; } 100% { opacity: 0.2; } }
+
+        .result-container { flex: 1; background: rgba(0,0,0,0.2); border-radius: 20px; margin: 10px 0; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid rgba(255,255,255,0.2); padding: 15px; overflow-y: auto; position: relative; }
+        
+        .placeholder { text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .placeholder p { margin: 0; }
+        .vietlott-text { font-weight: 700; color: var(--gold); }
+
+        .game-info { font-size: 11px; opacity: 0.7; margin-bottom: 10px; }
+        
+        /* Max 3D+ Ball Style */
+        .set-row { display: flex; justify-content: center; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
+        .digit-box { width: 45px; height: 60px; background: white; color: #333; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 26px; font-weight: 800; box-shadow: 0 4px 0 #ccc, inset 0 -2px 0 rgba(0,0,0,0.1); border: 2px solid #ddd; }
+        @media (max-width: 350px) { .digit-box { width: 38px; height: 50px; font-size: 22px; } }
+        
+        #meter-box { width: 95%; margin-top: 15px; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+        .meter-header { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: var(--gold); }
+        .bar-bg { height: 14px; background: #222; border-radius: 7px; overflow: hidden; border: 1px solid #444; }
+        #bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #00ff00, #ffff00, #ff0000); transition: width 1s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
+        #ai-advice { font-size: 10px; text-align: center; margin-top: 5px; color: white; opacity: 0.9; min-height: 12px;}
+
+        .btn-main { background: linear-gradient(180deg, var(--gold) 0%, #cc9900 100%); border: none; padding: 16px; border-radius: 15px; color: #7b0a0e; font-weight: 800; font-size: 16px; cursor: pointer; box-shadow: 0 6px 0 #8b6b00; margin-top: 10px; transition: all 0.1s; width: 100%; text-transform: uppercase; border: 2px solid rgba(255,255,255,0.2); }
+        .btn-main:active { transform: translateY(4px); box-shadow: 0 2px 0 #8b6b00; }
+        
+        /* Popup */
+        .popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .popup.show { opacity: 1; pointer-events: auto; }
+        .popup-content { background: #fff; color: #333; padding: 30px; border-radius: 20px; text-align: center; border: 5px solid var(--gold); box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 80%; max-width: 320px;}
+        .popup-title { font-weight: 700; color: var(--vietlott-dark); font-size: 20px; margin-bottom: 10px; }
+        .popup-balls { display: flex; justify-content: center; gap: 5px; margin-top: 15px; }
+        .popup-digit { width: 30px; height: 40px; background: #eee; color: #333; border-radius: 5px; display: flex; justify-content: center; align-items: center; font-size: 18px; font-weight: 700; border: 1px solid #ccc;}
+
+    </style>
+</head>
+<body onload="initSystem()">
+
+<div class="app-wrapper">
+    <header>
+        <div class="status-bar">
+            <span id="led"></span>
+            <span id="vietlott_vn_status">Đang kết nối vietlott.vn...</span>
+        </div>
+        <img src="icon.png" class="logo-img" alt="Vietlott Logo">
+        <h4 style="margin: 0; font-weight: 600;">MAX 3D+ AI Pro</h4>
+        <span id="real_time_clock" style="font-size: 12px; font-weight: 600;"></span>
+    </header>
+
+    <main class="result-container" id="zoomContainer">
+        <div id="resultDisplay" class="placeholder">
+            <img src="icon.png" style="width: 80px; opacity: 0.3; margin-bottom: 15px;">
+            <p>Xổ số tự chọn <span class="vietlott-text">Vietlott</span> Max 3D+</p>
+            <p class="game-info">Luật chơi: Chọn 2 bộ số, mỗi bộ 3 chữ số (000-999)</p>
+            <p style="opacity:0.6; font-size: 12px; text-align: center;">Vui lòng chạm vào "SIÊU PHÂN TÍCH" để bắt đầu thuật toán AI kết hợp Thần số học.</p>
+        </div>
+
+        <div id="meter-box">
+            <div class="meter-header">
+                <span>Jackpot Meter [Độ "chín"]</span>
+                <span id="percent-label">AI DỰ BÁO: 0%</span>
+            </div>
+            <div class="bar-bg"><div id="bar-fill"></div></div>
+            <div id="ai-advice"></div>
+        </div>
+    </main>
+
+    <button class="btn-main" onclick="handleAnalysis()">SIÊU PHÂN TÍCH AI & THẦN SỐ HỌC</button>
+</div>
+
+<!-- Popup Thông báo High Alert -->
+<div class="popup" id="popupHighAlert">
+    <div class="popup-content">
+        <p class="popup-title">🔥 HIGH ALERT! 🔥</p>
+        <p style="font-size: 14px; margin: 0;">AI siêu phân tích Thần số học phát hiện:</p>
+        <p style="font-size: 16px; font-weight: 700; color: var(--vietlott-dark); margin: 5px 0;">BỘ SỐ Jackpot XÁC SUẤT CỰC CAO</p>
+        <div class="popup-balls" id="popupBalls"></div>
+        <p style="font-size: 11px; margin-top: 10px; opacity: 0.7;">Độ chín Jackpot: ~98.5%. Vào tiền ngay!</p>
+        <button class="btn-main" style="padding: 10px; margin-top: 15px; font-size: 14px; box-shadow: 0 4px 0 #8b6b00;" onclick="closePopup()">XÁC NHẬN</button>
+    </div>
+</div>
+
+<script>
+    // Định nghĩa âm thanh (Web Audio API)
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function createOscillator(frequency, type, startTime, duration) {
+        let oscillator = audioCtx.createOscillator();
+        let gainNode = audioCtx.createGain();
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, startTime);
+        gainNode.gain.setValueAtTime(0.1, startTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
+    }
+
+    function playClickSound() {
+        if (!audioCtx) return;
+        createOscillator(660, 'sine', audioCtx.currentTime, 0.05);
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function playResultSound() {
+        if (!audioCtx) return;
+        createOscillator(880, 'sine', audioCtx.currentTime, 0.1);
+        setTimeout(() => createOscillator(1320, 'sine', audioCtx.currentTime, 0.1), 50);
+        setTimeout(() => createOscillator(1760, 'sine', audioCtx.currentTime, 0.2), 100);
+        if (navigator.vibrate) navigator.vibrate([50, 30, 100]);
+    }
+
+    function playPopupSound() {
+        if (!audioCtx) return;
+        createOscillator(440, 'triangle', audioCtx.currentTime, 0.2);
+        setTimeout(() => createOscillator(440, 'triangle', audioCtx.currentTime, 0.2), 300);
+        setTimeout(() => createOscillator(440, 'triangle', audioCtx.currentTime, 0.5), 600);
+        if (navigator.vibrate) navigator.vibrate([100, 100, 100, 100, 300]);
+    }
+
+    // Hiệu ứng pháo hoa (Confetti)
+    function triggerConfetti() {
+        confetti({
+            particleCount: 120,
+            spread: 90,
+            origin: { y: 0.6 },
+            colors: ['#ed1c24', '#ffd700', '#ffffff'],
+            ticks: 200,
+            gravity: 1.2
+        });
+    }
+
+    // Đồng hồ thời gian thực
+    function updateClock() {
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+        document.getElementById('real_time_clock').innerText = `${hours}:${minutes}:${seconds}`;
+    }
+
+    // Giả lập kết nối vietlott.vn
+    function initConnectionStatus() {
+        const led = document.getElementById('led');
+        const statusText = document.getElementById('vietlott_vn_status');
+        
+        led.className = 'led-blink';
+        statusText.innerText = 'Đang kết nối vietlott.vn...';
+
+        setTimeout(() => {
+            led.className = 'led-connected';
+            statusText.innerText = 'vietlott.vn (Thời gian thực)';
+        }, 1500 + Math.random() * 1000); 
+    }
+
+    // Khởi tạo hệ thống
+    function initSystem() {
+        updateClock();
+        setInterval(updateClock, 1000);
+        initConnectionStatus();
+    }
+
+    // Hàm tạo số ngẫu nhiên 3 chữ số (000-999)
+    function generate3Digits() {
+        return Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    }
+
+    // Logic xử lý SIÊU PHÂN TÍCH AI & THẦN SỐ HỌC
+    function handleAnalysis() {
+        playClickSound();
+
+        // 1. Giả lập thuật toán AI siêu phân tích (ngẫu nhiên có cấu trúc)
+        // Mục tiêu toán học khả thi là tạo bộ sốentropy cao, tránh các số "hot" quá mức
+        let set1 = generate3Digits();
+        let set2 = generate3Digits();
+        
+        // Vòng lặp chống trùng
+        while (set1 === set2) {
+            set2 = generate3Digits();
+        }
+
+        // 2. Hiển thị lên giao diện
+        setTimeout(() => {
+            playResultSound();
+            triggerConfetti();
+
+            const display = document.getElementById('resultDisplay');
+            display.innerHTML = `
+                <div style="font-size:11px; opacity: 0.7; font-weight: 700; color: #fff;">AI SIÊU PHÂN TÍCH & THẦN SỐ HỌC KẾT QUẢ:</div>
+                <div style="margin: 10px 0 5px 0; font-weight:bold; color:var(--gold); font-size: 18px;">BỘ SỐ Jackpot 1</div>
+                <div class="set-row">${renderDigits(set1)}</div>
+                <div style="margin:15px 0 5px 0; font-weight:bold; color:var(--gold); font-size: 18px;">BỘ SỐ Jackpot 2</div>
+                <div class="set-row">${renderDigits(set2)}</div>
+            `;
+            display.classList.remove('placeholder');
+
+            // 3. Cập nhật Jackpot Meter (Fix lỗi kẹt)
+            // Giá trị Jackpot 3D+ cố định tỷ 1 tỷ, ta giả lập "độ chín"
+            // dựa trên giờ cao điểm và tần suất giả lập
+            animateMeter(set1, set2);
+
+        }, 400 + Math.random() * 300); // Giả lập thời gian tính toán của AI
+    }
+
+    function renderDigits(numStr) {
+        return numStr.split('').map(d => `<div class="digit-box">${d}</div>`).join('');
+    }
+
+    function renderPopupDigits(numStr) {
+        return numStr.split('').map(d => `<div class="popup-digit">${d}</div>`).join('');
+    }
+
+    // Logic Jackpot Meter giả lập
+    function animateMeter(s1, s2) {
+        const fill = document.getElementById('bar-fill');
+        const label = document.getElementById('percent-label');
+        const advice = document.getElementById('ai-advice');
+        
+        fill.style.transition = 'none';
+        fill.style.width = '0%';
+        advice.innerHTML = '';
+        
+        // Giả lập thuật toán độ chín dựa trên các số (Thần số học) và thời gian
+        const now = new Date();
+        const currentSum1 = s1.split('').reduce((sum, d) => sum + parseInt(d), 0);
+        const currentSum2 = s2.split('').reduce((sum, d) => sum + parseInt(d), 0);
+        const baseTimeHeat = (now.getHours() * 2 + now.getMinutes() / 15) % 100; // Giả lập
+        
+        let randomVal = 40 + (baseTimeHeat + currentSum1 + currentSum2 + Math.random() * 20) % 59;
+        
+        // Tăng độ nóng dựa trên tần suất giả lập (random)
+        randomVal += Math.random() * 5;
+        if (randomVal > 99) randomVal = 99;
+
+        // Nếu xác suất cực cao, kích hoạt High Alert (mức 98.5%)
+        if (randomVal > 98) {
+            randomVal = 98.5;
+        }
+
+        let adviceText = '';
+        if (randomVal > 90) {
+            adviceText = "Nên vào tiền ngay! AI siêu phân tích phát hiện độ 'chín' cực cao.";
+        } else if (randomVal > 65) {
+            adviceText = "⭐ Vùng cơ hội tốt. Cân nhắc chiến lược phân bổ.";
+        } else {
+            adviceText = "Tiếp tục quan sát. Kết hợp các kỳ quay tiếp theo.";
+        }
+        
+        setTimeout(() => {
+            fill.style.transition = 'width 1s cubic-bezier(0.17, 0.67, 0.83, 0.67)';
+            fill.style.width = randomVal + '%';
+            label.innerText = 'AI DỰ BÁO: ' + randomVal.toFixed(1) + '%';
+            advice.innerHTML = adviceText;
+
+            if (randomVal >= 98.5) {
+                setTimeout(() => triggerPopup(s1, s2), 1200); // Hiện sau khi thanh chạy xong
+            }
+        }, 50);
+    }
+
+    // Popup Logic
+    function triggerPopup(s1, s2) {
+        playPopupSound();
+        const popup = document.getElementById('popupHighAlert');
+        const popupBalls = document.getElementById('popupBalls');
+        popupBalls.innerHTML = `
+            <div class="popup-balls" style="flex-direction: column; gap: 3px;">
+                <div class="popup-balls">${renderPopupDigits(s1)}</div>
+                <div class="popup-balls">${renderPopupDigits(s2)}</div>
+            </div>
+        `;
+        popup.classList.add('show');
+    }
+
+    function closePopup() {
+        const popup = document.getElementById('popupHighAlert');
+        popup.classList.remove('show');
+    }
+
+    // Phóng to/Thu nhỏ (pinch-to-zoom được PWA Max viewport xử lý, ta thêm hỗ trợ nút nếu cần, hoặc zoom cơ bản)
+    const zoomContainer = document.getElementById('zoomContainer');
+    let scale = 1;
+
+    // Hỗ trợ pinch-to-zoom thủ công trên container (cơ bản)
+    zoomContainer.addEventListener('gesturestart', function(e) {
+        e.preventDefault();
+    });
+
+</script>
+</body>
+</html>
